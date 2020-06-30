@@ -1,0 +1,10 @@
+# For more options and information see
+# http://rpf.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# If disable_splash is set to 1, the rainbow splash screen will not be shown on
+# boot. The default value is 0.
+disable_splash=1
+
+# overlays are defined in 07-devices
+# initramfs is defined in 99-overlafs

@@ -1,0 +1,290 @@
+/*
+* Copyright (C) 2018 Gumstix, Inc. - https://www.gumstix.com/
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 or
+* (at your option) any later version as published by the Free Software
+* Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+*/
+/dts-v1/;
+/plugin/;
+
+/ {
+  compatible = "brcm,bcm2708";
+
+  fragment@0 {
+    target-path = "/";
+    __overlay__ {
+      model = "PCH Appliance V3";
+      autobsp_overlay {
+        model = "PCH Appliance V3";
+        status = "okay";
+      };
+      None {
+        status = "okay";
+      };
+      leds {
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = < &leds_default >;
+        compatible = "gpio-leds";
+        type = "led";
+
+        led_top_0 {
+          status = "okay";
+          type = "led";
+          default-state = "off";
+          label = "led_top_0";
+          linux,default-trigger = "none";
+          gpios = < &gpio 42 0 >;
+        };
+
+        led_top_1 {
+          status = "okay";
+          type = "led";
+          default-state = "off";
+          label = "led_top_1";
+          linux,default-trigger = "none";
+          gpios = < &gpio 43 0 >;
+        };
+
+        led_top_2 {
+          status = "okay";
+          type = "led";
+          default-state = "off";
+          label = "led_top_2";
+          linux,default-trigger = "none";
+          gpios = < &gpio 44 0 >;
+        };
+      };
+    };
+  };
+
+  fragment@1 {
+    target-path = "/soc";
+    __overlay__ {
+      reg_3v3:regulator@0 {
+        compatible = "regulator-fixed";
+        reg = < 0 >;
+        regulator-name = "REG_3V3";
+        regulator-min-microvolt = < 3300000 >;
+        regulator-max-microvolt = < 3300000 >;
+        regulator-always-on;
+      };
+
+      reg_1v8:regulator@1 {
+        compatible = "regulator-fixed";
+        reg = < 1 >;
+        regulator-name = "REG_1V8";
+        regulator-min-microvolt = < 1800000 >;
+        regulator-max-microvolt = < 1800000 >;
+        regulator-always-on;
+      };
+    };
+  };
+
+
+// uart0 devices
+  fragment@2 {
+    target = < &uart0 >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &uart0_default >;
+      type = "uart";
+    };
+  };
+
+
+// asp devices
+  fragment@3 {
+    target = < &i2s >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &i2s_default >;
+      #sound-dai-cells = < 0 >;
+    };
+  };
+
+  fragment@4 {
+    target = < &sound >;
+    __overlay__ {
+      status = "okay";
+      compatible = "simple-audio-card";
+      simple-audio-card,routing = "Headphone Jack", "HPLOUT", "Headphone Jack", "HPROUT";
+      simple-audio-card,widgets = "Headphone", "Headphone Jack";
+      simple-audio-card,format = "i2s";
+      type = "audio";
+      simple-audio-card,name = "TLV320AIC3x Codec";
+      simple-audio-card,frame-master = < &dailink0_master >;
+      simple-audio-card,bitclock-master = < &dailink0_master >;
+      dailink0_master: simple-audio-card,cpu {  sound-dai = < &i2s >;  };
+      dailink0_slave: simple-audio-card,codec {  sound-dai = < &tlv320aic3106 >; system-clock-frequency = < 12000000 >; };
+    };
+  };
+
+
+// uart1 devices
+  fragment@5 {
+    target = < &uart1 >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &uart1_default >;
+    };
+  };
+
+
+// i2c_buses devices
+  fragment@6 {
+    target = < &i2c0 >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &i2c0_default >;
+      clock-frequency = < 400000 >;
+      #size-cells = < 0 >;
+      #address-cells = < 1 >;
+      ds_rtc: ds_rtc@68 {
+        status = "okay";
+        compatible = "dallas,ds1340";
+        reg = < 0x68 >;
+        type = "i2c";
+        // trickle-resistor-ohms = < 2000 >;
+      };
+      tca6416a: tca6416a@20 {
+        status = "okay";
+        compatible = "ti,tca6416";
+        type = "i2c";
+        reg = < 0x20 >;
+        #gpio-cells = < 2 >;
+        // reset-gpios = < &gpio 4 1 >;
+        interrupt-parent = < &gpio >;
+        interrupts = < 5 8 >;
+        gpio-controller;
+      };
+    };
+  };
+
+  fragment@7 {
+    target = < &i2c1 >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &i2c1_default >;
+      #size-cells = < 0 >;
+      clock-frequency = < 400000 >;
+      #address-cells = < 1 >;
+      // changed from @1b
+      tlv320aic3106: tlv320aic3106@1b {
+        status = "okay";
+        compatible = "ti,tlv320aic3106";
+        ai3x-micbias-vg = < 2 >;
+        reg = < 0x1b >;
+        IOVDD-supply = < &reg_3v3 >;
+        #sound-dai-cells = < 0 >;
+        AVDD-supply = < &reg_3v3 >;
+        type = "audio";
+        DVDD-supply = < &reg_1v8 >;
+        gpio-reset = < &gpio 12 1 >;
+      };
+    };
+  };
+
+
+// rpi-hdmi devices
+  fragment@8 {
+    target = < &hdmi >;
+    __overlay__ {
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = < &hdmi_default >;
+      type = "rpi-hdmi";
+    };
+  };
+
+  fragment@9 {
+    target-path = "/chosen";
+    __overlay__ {
+      bootargs = "8250.nr_uarts=1";
+    };
+  };
+
+  fragment@10 {
+    target = < &gpio >;
+    __overlay__ {
+
+      i2c0_default: pinmux_i2c0_default {
+        brcm,pins = <
+            1 /* gpio1.scl0 */
+            0 /* gpio0.sda0 */
+            4 /* gpio4.gpio4 */
+            5 /* gpio5.gpio5 */
+        >;
+        brcm,function = <  4   4   0   0  >;
+        brcm,pull = < 0 0 2 0 >;
+      };
+
+      uart0_default: pinmux_uart0_default {
+        brcm,pins = <
+            15 /* gpio15.rxd0 */
+            14 /* gpio14.txd0 */
+        >;
+        brcm,function = <  4   4  >;
+        brcm,pull = < 2 0 >;
+      };
+
+      hdmi_default: pinmux_hdmi_default {
+        brcm,pins = <
+            45 /* gpio45.gpio45 */
+        >;
+        brcm,function = <  0  >;
+      };
+
+      leds_default: pinmux_leds_default {
+        brcm,pins = <
+            43 /* gpio43.gpio43 */
+            44 /* gpio44.gpio44 */
+            42 /* gpio42.gpio42 */
+        >;
+        brcm,function = <  1   1   1  >;
+        brcm,pull = < 1 1 1 >;
+      };
+
+      i2c1_default: pinmux_i2c1_default {
+        brcm,pins = <
+            2 /* gpio2.sda1 */
+            12 /* gpio12.gpio12 */
+            3 /* gpio3.scl1 */
+        >;
+        brcm,function = <  4   0   4  >;
+      };
+
+      uart1_default: pinmux_uart1_default {
+        brcm,pins = <
+            32 /* gpio32.txd1 */
+            33 /* gpio33.rxd1 */
+        >;
+        brcm,function = <  2   2  >;
+        brcm,pull = < 0 2 >;
+      };
+
+      i2s_default: pinmux_i2s_default {
+        brcm,pins = <
+            19 /* gpio19.pcm_fs */
+            18 /* gpio18.pcm_clk */
+            20 /* gpio20.pcm_din */
+            21 /* gpio21.pcm_dout */
+        >;
+        brcm,function = <  4   4   4   4  >;
+      };
+    };
+  };
+};

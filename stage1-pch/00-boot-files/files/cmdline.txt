@@ -1,0 +1,1 @@
+console=tty1 loglevel=3 root=ROOTDEV rootfstype=ext4 rootwait elevator=deadline
